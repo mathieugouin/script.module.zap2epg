@@ -19,18 +19,14 @@ import base64
 import codecs
 import time
 import datetime
-import _strptime
 import calendar
 import gzip
 import os
 import logging
 import re
 import json
-import sys
-from os.path import dirname
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
-import hashlib
 
 
 def mainRun(userdata):
@@ -135,9 +131,9 @@ def mainRun(userdata):
                 for entry in entries:
                     oldfile = entry.split('.')[0]
                     if oldfile.isdigit():
-                        fn = os.path.join(cacheDir, entry)
                         if (int(oldfile)) < (gridtimeStart + (int(redays) * 86400)):
                             try:
+                                fn = os.path.join(cacheDir, entry)
                                 os.remove(fn)
                                 logging.info('Deleting old cache: %s', entry)
                             except OSError, e:
@@ -214,6 +210,7 @@ def mainRun(userdata):
     def printHeader(fh, enc):
         logging.info('Creating xmltv.xml file...')
         fh.write("<?xml version=\"1.0\" encoding=\""+ enc + "\"?>\n")
+        fh.write("<?xml-stylesheet href=\"xmltv.xsl\" type=\"text/xsl\"?>\n")
         fh.write("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\n")
         fh.write("<tv source-info-url=\"http://tvschedule.zap2it.com/\" source-info-name=\"zap2it.com\">\n")
 
@@ -279,6 +276,9 @@ def mainRun(userdata):
                                     fh.write('\t\t<title lang=\"' + lang + '\">' + re.sub('&','&amp;',edict['epshow']) + '</title>\n')
                                 if edict['eptitle'] is not None:
                                     fh.write('\t\t<sub-title lang=\"'+ lang + '\">' + re.sub('&','&amp;', edict['eptitle']) + '</sub-title>\n')
+                                # no subtitle, but year provided: write movie year as subtitle
+                                if edict['eptitle'] is None and edict['epyear'] is not None:
+                                    fh.write('\t\t<sub-title lang=\"' + lang + '\">Movie (' + edict['epyear'] + ')</sub-title>\n')
                                 if xdesc == 'true':
                                     xdescSort = addXDetails(edict)
                                     fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&','&amp;', xdescSort) + '</desc>\n')
@@ -400,41 +400,8 @@ def mainRun(userdata):
             ch_guide = json.loads(content)
             for station in ch_guide['channels']:
                 skey = station.get('channelId')
-                if stationList is not None:
-                    if skey in stationList:
-                        episodes = station.get('events')
-                        for episode in episodes:
-                            epkey = str(calendar.timegm(time.strptime(episode.get('startTime'), '%Y-%m-%dT%H:%M:%SZ')))
-                            schedule[skey][epkey] = {}
-                            schedule[skey][epkey]['epid'] = episode['program'].get('tmsId')
-                            schedule[skey][epkey]['epstart'] = str(calendar.timegm(time.strptime(episode.get('startTime'), '%Y-%m-%dT%H:%M:%SZ')))
-                            schedule[skey][epkey]['epend'] = str(calendar.timegm(time.strptime(episode.get('endTime'), '%Y-%m-%dT%H:%M:%SZ')))
-                            schedule[skey][epkey]['eplength'] = episode.get('duration')
-                            schedule[skey][epkey]['epshow'] = episode['program'].get('title')
-                            schedule[skey][epkey]['eptitle'] = episode['program'].get('episodeTitle')
-                            schedule[skey][epkey]['epdesc'] = episode['program'].get('shortDesc')
-                            schedule[skey][epkey]['epyear'] = episode['program'].get('releaseYear')
-                            schedule[skey][epkey]['eprating'] = episode.get('rating')
-                            schedule[skey][epkey]['epflag'] = episode.get('flag')
-                            schedule[skey][epkey]['eptags'] = episode.get('tags')
-                            schedule[skey][epkey]['epsn'] = episode['program'].get('season')
-                            schedule[skey][epkey]['epen'] = episode['program'].get('episode')
-                            schedule[skey][epkey]['epthumb'] = episode.get('thumbnail')
-                            schedule[skey][epkey]['epoad'] = None
-                            schedule[skey][epkey]['epstar'] = None
-                            schedule[skey][epkey]['epfilter'] = episode.get('filter')
-                            schedule[skey][epkey]['epgenres'] = None
-                            schedule[skey][epkey]['epcredits'] = None
-                            schedule[skey][epkey]['epxdesc'] = None
-                            schedule[skey][epkey]['epseries'] = episode.get('seriesId')
-                            schedule[skey][epkey]['epimage'] = None
-                            schedule[skey][epkey]['epfan'] = None
-                            if "TBA" in schedule[skey][epkey]['epshow']:
-                                CheckTBA = "Unsafe"
-                            elif schedule[skey][epkey]['eptitle']:
-                                if "TBA" in schedule[skey][epkey]['eptitle']:
-                                    CheckTBA = "Unsafe"
-                else:
+
+                if (stationList is None) or (stationList is not None and skey in stationList):
                     episodes = station.get('events')
                     for episode in episodes:
                         epkey = str(calendar.timegm(time.strptime(episode.get('startTime'), '%Y-%m-%dT%H:%M:%SZ')))
@@ -467,6 +434,7 @@ def mainRun(userdata):
                         elif schedule[skey][epkey]['eptitle']:
                             if "TBA" in schedule[skey][epkey]['eptitle']:
                                 CheckTBA = "Unsafe"
+
         except Exception as e:
             logging.exception('Exception: parseEpisodes')
         return CheckTBA
