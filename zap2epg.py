@@ -96,8 +96,8 @@ def mainRun(userdata):
     logging.info('Running zap2epg-0.7.4 for zipcode: %s and lineup: %s', zipcode, lineup)
     pythonStartTime = time.time()
     cacheDir = os.path.join(userdata, 'cache')
-    dayHours = int(days) * 8 # set back to 8 when done testing
-    gridtimeStart = (int(time.mktime(time.strptime(str(datetime.datetime.now().replace(microsecond=0,second=0,minute=0)), '%Y-%m-%d %H:%M:%S'))))
+    dayHours = int(days) * 8  # set back to 8 when done testing
+    gridtimeStart = (int(time.mktime(time.strptime(str(datetime.datetime.now().replace(microsecond=0, second=0, minute=0)), '%Y-%m-%d %H:%M:%S'))))
     schedule = {}
     tvhMatchDict = {}
 
@@ -139,7 +139,7 @@ def mainRun(userdata):
                             except OSError, e:
                                 logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
         except Exception as e:
-            logging.exception('Exception: deleteOldCache - %s', e.strerror)
+            logging.exception('Exception: deleteOldCache - %s', repr(e))
 
     def deleteOldShowCache(showList):
         logging.info('Checking for old show cache files...')
@@ -157,16 +157,16 @@ def mainRun(userdata):
                             except OSError, e:
                                 logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
         except Exception as e:
-            logging.exception('Exception: deleteOldshowCache - %s', e.strerror)
+            logging.exception('Exception: deleteOldshowCache - %s', repr(e))
 
     def convTime(t):
-        return time.strftime("%Y%m%d%H%M%S",time.localtime(int(t)))
+        return time.strftime("%Y%m%d%H%M%S", time.localtime(int(t)))
 
     def savepage(fn, data):
         if not os.path.exists(cacheDir):
             os.mkdir(cacheDir)
         fileDir = os.path.join(cacheDir, fn)
-        with gzip.open(fileDir,"wb+") as f:
+        with gzip.open(fileDir, "wb+") as f:
             f.write(data)
             f.close()
 
@@ -195,7 +195,7 @@ def mainRun(userdata):
 
         if EPfilter is not None:
             for f in EPfilter:
-                fClean = re.sub('filter-','',f).lower()
+                fClean = re.sub('filter-', '', f).lower()
                 if fClean in genreMapping:
                     genreList.append(genreMapping[fClean])
                 else:
@@ -209,7 +209,7 @@ def mainRun(userdata):
 
     def printHeader(fh, enc):
         logging.info('Creating xmltv.xml file...')
-        fh.write("<?xml version=\"1.0\" encoding=\""+ enc + "\"?>\n")
+        fh.write("<?xml version=\"1.0\" encoding=\"" + enc + "\"?>\n")
         fh.write("<?xml-stylesheet href=\"xmltv.xsl\" type=\"text/xsl\"?>\n")
         fh.write("<!DOCTYPE tv SYSTEM \"xmltv.dtd\">\n\n")
         fh.write("<tv source-info-url=\"http://tvschedule.zap2it.com/\" source-info-name=\"zap2it.com\">\n")
@@ -223,23 +223,23 @@ def mainRun(userdata):
         try:
             logging.info('Writing Stations to xmltv.xml file...')
             try:
-                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: int(x[1]['chnum'])))
+                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: float(x[1]['chnum'])))
             except:
                 scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: x[1]['chfcc']))
             for station in scheduleSort:
                 fh.write('\t<channel id=\"' + station + '.zap2epg\">\n')
                 if 'chtvh' in scheduleSort[station] and scheduleSort[station]['chtvh'] is not None:
-                    xchtvh = re.sub('&','&amp;',scheduleSort[station]['chtvh'])
+                    xchtvh = re.sub('&', '&amp;', scheduleSort[station]['chtvh'])
                     fh.write('\t\t<display-name>' + xchtvh + '</display-name>\n')
                 if 'chnum' in scheduleSort[station] and 'chfcc' in scheduleSort[station]:
                     xchnum = scheduleSort[station]['chnum']
                     xchfcc = scheduleSort[station]['chfcc']
-                    fh.write('\t\t<display-name>' + xchnum + ' ' + re.sub('&','&amp;',xchfcc) + '</display-name>\n')
-                    fh.write('\t\t<display-name>' + re.sub('&','&amp;',xchfcc) + '</display-name>\n')
+                    fh.write('\t\t<display-name>' + xchnum + ' ' + re.sub('&', '&amp;', xchfcc) + '</display-name>\n')
+                    fh.write('\t\t<display-name>' + re.sub('&', '&amp;', xchfcc) + '</display-name>\n')
                     fh.write('\t\t<display-name>' + xchnum + '</display-name>\n')
                 elif 'chfcc' in scheduleSort[station]:
-                    xchnum = scheduleSort[station]['chfcc']
-                    fh.write('\t\t<display-name>' + re.sub('&','&amp;',xcfcc) + '</display-name>\n')
+                    xchfcc = scheduleSort[station]['chfcc']
+                    fh.write('\t\t<display-name>' + re.sub('&','&amp;', xchfcc) + '</display-name>\n')
                 elif 'chnum' in scheduleSort[station]:
                     xchnum = scheduleSort[station]['chnum']
                     fh.write('\t\t<display-name>' + xchnum + '</display-name>\n')
@@ -273,9 +273,9 @@ def mainRun(userdata):
                                 dd_progid = edict['epid']
                                 fh.write('\t\t<episode-num system=\"dd_progid\">' + dd_progid[:-4] + '.' + dd_progid[-4:] + '</episode-num>\n')
                                 if edict['epshow'] is not None:
-                                    fh.write('\t\t<title lang=\"' + lang + '\">' + re.sub('&','&amp;',edict['epshow']) + '</title>\n')
+                                    fh.write('\t\t<title lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['epshow']) + '</title>\n')
                                 if edict['eptitle'] is not None:
-                                    fh.write('\t\t<sub-title lang=\"'+ lang + '\">' + re.sub('&','&amp;', edict['eptitle']) + '</sub-title>\n')
+                                    fh.write('\t\t<sub-title lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['eptitle']) + '</sub-title>\n')
                                 # no subtitle, but year provided: write movie year as subtitle
                                 if edict['eptitle'] is None and edict['epyear'] is not None:
                                     fh.write('\t\t<sub-title lang=\"' + lang + '\">Movie (' + edict['epyear'] + ')</sub-title>\n')
@@ -284,10 +284,10 @@ def mainRun(userdata):
                                     fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&','&amp;', xdescSort) + '</desc>\n')
                                 if xdesc == 'false':
                                     if edict['epdesc'] is not None:
-                                        fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&','&amp;', edict['epdesc']) + '</desc>\n')
+                                        fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['epdesc']) + '</desc>\n')
                                 if edict['epsn'] is not None and edict['epen'] is not None:
                                     fh.write("\t\t<episode-num system=\"onscreen\">" + 'S' + edict['epsn'].zfill(2) + 'E' + edict['epen'].zfill(2) + "</episode-num>\n")
-                                    fh.write("\t\t<episode-num system=\"xmltv_ns\">" + str(int(edict['epsn'])-1) +  "." + str(int(edict['epen'])-1) + ".</episode-num>\n")
+                                    fh.write("\t\t<episode-num system=\"xmltv_ns\">" + str(int(edict['epsn'])-1) + "." + str(int(edict['epen'])-1) + ".</episode-num>\n")
                                 if edict['epyear'] is not None:
                                     fh.write('\t\t<date>' + edict['epyear'] + '</date>\n')
                                 if not episode.startswith("MV"):
@@ -463,7 +463,7 @@ def mainRun(userdata):
                                         URLcontent = urllib2.Request(url, data=data)
                                         JSONcontent = urllib2.urlopen(URLcontent).read()
                                         if JSONcontent:
-                                            with open(fileDir,"wb+") as f:
+                                            with open(fileDir, "wb+") as f:
                                                 f.write(JSONcontent)
                                                 f.close()
                                             retry = 0
@@ -617,7 +617,7 @@ def mainRun(userdata):
                 myear = "Released: " + edict['epyear'] + space
             if edict['eprating'] is not None:
                 ratings = edict['eprating'] + space
-            if edict['epflag'] != []:
+            if edict['epflag']:
                 flagList = edict['epflag']
                 new = ' - '.join(flagList).upper() + space
             #if edict['epnew'] is not None:
@@ -628,7 +628,7 @@ def mainRun(userdata):
                 #new = edict['epprem'] + space
             #if edict['epfin'] is not None:
                 #new = edict['epfin'] + space
-            if edict['eptags'] != []:
+            if edict['eptags']:
                 tagsList = edict['eptags']
                 cc = ' | '.join(tagsList).upper() + space
             #if edict['ephd'] is not None:
@@ -667,7 +667,6 @@ def mainRun(userdata):
             return descsort
         except Exception as e:
             logging.exception('Exception: addXdetails to description')
-
 
     try:
         if not os.path.exists(cacheDir):
@@ -717,12 +716,13 @@ def mainRun(userdata):
             showList = []
         xmltv()
         deleteOldShowCache(showList)
-        timeRun = round((time.time() - pythonStartTime),2)
+        timeRun = round((time.time() - pythonStartTime), 2)
         logging.info('zap2epg completed in %s seconds. ', timeRun)
         logging.info('%s Stations and %s Episodes written to xmltv.xml file.', str(stationCount), str(episodeCount))
         return timeRun, stationCount, episodeCount
     except Exception as e:
         logging.exception('Exception: main')
+
 
 if __name__ == '__main__':
     userdata = os.getcwd()
