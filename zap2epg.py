@@ -173,24 +173,26 @@ def mainRun(userdata):
     def genreSort(EPfilter, EPgenre):
         genreList = []
         genreMapping = {
+            # Sorted in the order listed in the TVH Web UI
+            "art":              "Arts / Culture (without music)",
+            "children":         "Children's / Youth programs",
+            "family":           "Children's / Youth programs",
+            "education":        "Education / Science / Factual topics",
+            "how-to":           "Leisure hobbies",
             "movie":            "Movie / Drama",
             "movies":           "Movie / Drama",
+            "music":            "Music / Ballet / Dance",
             "news":             "News / Current affairs",
             "game-show":        "Game show / Quiz / Contest",
             "law":              "Show / Game show",
-            "art":              "Arts / Culture (without music)",
-            "entertainment":    "Popular culture / Traditional Arts",
+            "talk":             "Talk show",
             "politics":         "Social / Political issues / Economics",
-            "education":        "Education / Science / Factual topics",
-            "how-to":           "Leisure hobbies",
+            "sports":           "Sports",
+            # The followings are not directly available form TVH Web UI:
+            "entertainment":    "Popular culture / Traditional Arts",
             "travel":           "Tourism / Travel",
             "sitcom":           "Variety show",
-            "talk":             "Talk show",
-            "children":         "Children's / Youth programs",
             "animated":         "Cartoons / Puppets",
-            "music":            "Music / Ballet / Dance",
-            "family":           "Children's / Youth programmes",
-            "sports":           "Sports",
         }
 
         if EPfilter is not None:
