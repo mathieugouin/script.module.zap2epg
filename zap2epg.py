@@ -162,10 +162,7 @@ def mainRun(userdata):
     def convTime(t):
         return time.strftime("%Y%m%d%H%M%S", time.localtime(int(t)))
 
-    def savepage(fn, data):
-        if not os.path.exists(cacheDir):
-            os.mkdir(cacheDir)
-        fileDir = os.path.join(cacheDir, fn)
+    def savepage(fileDir, data):
         with gzip.open(fileDir, "wb+") as f:
             f.write(data)
             f.close()
@@ -259,9 +256,15 @@ def mainRun(userdata):
             logging.info('Writing Episodes to xmltv.xml file...')
             if xdesc is True:
                 logging.info('Appending Xdetails to description for xmltv.xml file...')
-            for station in schedule:
+
+            try:
+                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: float(x[1]['chnum'])))
+            except:
+                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: x[1]['chfcc']))
+
+            for station in scheduleSort:
                 lang = 'en'
-                sdict = schedule[station]
+                sdict = OrderedDict(sorted(schedule[station].iteritems()))
                 for episode in sdict:
                     if not episode.startswith("ch"):
                         try:
@@ -407,6 +410,7 @@ def mainRun(userdata):
                     episodes = station.get('events')
                     for episode in episodes:
                         epkey = str(calendar.timegm(time.strptime(episode.get('startTime'), '%Y-%m-%dT%H:%M:%SZ')))
+                        # Format is station key (id) : episode key (timestamp)
                         schedule[skey][epkey] = {}
                         schedule[skey][epkey]['epid'] = episode['program'].get('tmsId')
                         schedule[skey][epkey]['epstart'] = str(calendar.timegm(time.strptime(episode.get('startTime'), '%Y-%m-%dT%H:%M:%SZ')))
