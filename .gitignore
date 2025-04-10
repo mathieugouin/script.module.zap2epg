@@ -3,5 +3,5 @@
 /cache
 *.pyo
 *.log
-xmltv.xml
+xmltv*.xml
 *.json
