@@ -284,7 +284,13 @@ def mainRun(userdata):
 
             for station in scheduleSort:
                 lang = 'en'
-                sdict = OrderedDict(sorted(schedule[station].iteritems()))
+                try:
+                    # Python 3
+                    iter_method = schedule[station].items
+                except AttributeError:
+                    # Python 2
+                    iter_method = schedule[station].iteritems
+                sdict = OrderedDict(sorted(iter_method()))
                 for episode in sdict:
                     if not episode.startswith("ch"):
                         try:
@@ -355,7 +361,7 @@ def mainRun(userdata):
                             #os.remove(fn)
                             #logging.info('Deleting episode %s:', episode)
         except Exception as e:
-            logging.exception('Exception: printEpisodes')
+            logging.exception('Exception: printEpisodes: %s', str(e))
 
     def xmltv():
         try:
