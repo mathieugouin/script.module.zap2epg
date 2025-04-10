@@ -734,7 +734,7 @@ def mainRun(userdata):
         logging.info('%s Stations and %s Episodes written to xmltv.xml file.', str(stationCount), str(episodeCount))
         return timeRun, stationCount, episodeCount
     except Exception as e:
-        logging.exception('Exception: main')
+        logging.exception('Exception: main ' + str(e))
 
 
 if __name__ == '__main__':
