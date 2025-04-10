@@ -27,9 +27,9 @@
     <setting id="lineup">Local Over the Air Broadcast</setting>
     <setting id="lineupcode">lineupId</setting>
     <setting id="passw" default="true"></setting>
-    <setting id="redays">3</setting>
+    <setting id="redays">0</setting>
     <setting id="slist">45867,53502,72755,65995,73014,63040,74875,58688,87652,44368,54298,58927,72895</setting>
-    <setting id="tvhmatch">true</setting>
+    <setting id="tvhmatch">false</setting>
     <setting id="tvhoff">false</setting>
     <setting id="tvhport">9981</setting>
     <setting id="tvhurl" default="true">127.0.0.1</setting>
