@@ -230,9 +230,16 @@ def mainRun(userdata):
         try:
             logging.info('Writing Stations to xmltv.xml file...')
             try:
-                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: float(x[1]['chnum'])))
+                # Python 3
+                iter_method = schedule.items
+            except AttributeError:
+                # Python 2
+                iter_method = schedule.iteritems
+
+            try:
+                scheduleSort = OrderedDict(sorted(iter_method(), key=lambda x: float(x[1]['chnum'])))
             except:
-                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: x[1]['chfcc']))
+                scheduleSort = OrderedDict(sorted(iter_method(), key=lambda x: x[1]['chfcc']))
             for station in scheduleSort:
                 fh.write('\t<channel id=\"' + station + '.zap2epg\">\n')
                 if 'chtvh' in scheduleSort[station] and scheduleSort[station]['chtvh'] is not None:
@@ -264,11 +271,16 @@ def mainRun(userdata):
             logging.info('Writing Episodes to xmltv.xml file...')
             if xdesc is True:
                 logging.info('Appending Xdetails to description for xmltv.xml file...')
-
             try:
-                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: float(x[1]['chnum'])))
+                # Python 3
+                iter_method = schedule.items
+            except AttributeError:
+                # Python 2
+                iter_method = schedule.iteritems
+            try:
+                scheduleSort = OrderedDict(sorted(iter_method(), key=lambda x: float(x[1]['chnum'])))
             except:
-                scheduleSort = OrderedDict(sorted(schedule.iteritems(), key=lambda x: x[1]['chfcc']))
+                scheduleSort = OrderedDict(sorted(iter_method(), key=lambda x: x[1]['chfcc']))
 
             for station in scheduleSort:
                 lang = 'en'
