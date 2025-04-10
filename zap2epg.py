@@ -111,14 +111,15 @@ def mainRun(userdata):
     def tvhMatchGet():
         tvhUrlBase = 'http://' + tvhurl + ":" + tvhport
         channels_url = tvhUrlBase + '/api/channel/grid?all=1&limit=999999999&sort=name&filter=[{"type":"boolean","value":true,"field":"enabled"}]'
-        if usern is not None and passw is not None:
-            logging.info('Adding Tvheadend username and password to request url...')
-            request = Request(channels_url)
-            request.add_header('Authorization', b'Basic ' + base64.b64encode(usern + b':' + passw))
-            response = urlopen(request)
-        else:
-            response = urlopen(channels_url)
         try:
+            if usern is not None and passw is not None:
+                logging.info('Adding Tvheadend username and password to request url...')
+                request = Request(channels_url)
+                request.add_header('Authorization', b'Basic ' + base64.b64encode(usern + b':' + passw))
+                response = urlopen(request)
+            else:
+                response = urlopen(channels_url)
+
             logging.info('Accessing Tvheadend channel list from: %s', tvhUrlBase)
             channels = json.load(response)
             for ch in channels['entries']:
@@ -126,8 +127,8 @@ def mainRun(userdata):
                 channelNum = ch['number']
                 tvhMatchDict[channelNum] = channelName
             logging.info('%s Tvheadend channels found...', str(len(tvhMatchDict)))
-        except HTTPError as e:
-            logging.exception('Exception: tvhMatch - %s', e.strerror)
+        except (HTTPError, URLError) as e:
+            logging.exception('Exception: tvhMatch - %s', str(e))
             pass
 
     def deleteOldCache(gridtimeStart):
@@ -144,7 +145,7 @@ def mainRun(userdata):
                                 os.remove(fn)
                                 logging.info('Deleting old cache: %s', entry)
                             except OSError as e:
-                                logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
+                                logging.warn('Error Deleting: %s - %s.' % (e.filename, str(e)))
         except Exception as e:
             logging.exception('Exception: deleteOldCache - %s', repr(e))
 
@@ -162,7 +163,7 @@ def mainRun(userdata):
                                 os.remove(fn)
                                 logging.info('Deleting old show cache: %s', entry)
                             except OSError as e:
-                                logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
+                                logging.warn('Error Deleting: %s - %s.' % (e.filename, str(e)))
         except Exception as e:
             logging.exception('Exception: deleteOldshowCache - %s', repr(e))
 
@@ -524,7 +525,7 @@ def mainRun(userdata):
                                                                 logging.info('Deleting %s due to TBA listings', filename)
                                                                 showList.remove(edict['epseries'])
                                                             except OSError as e:
-                                                                logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
+                                                                logging.warn('Error Deleting: %s - %s.' % (e.filename, str(e)))
                                                 except Exception as e:
                                                     logging.exception('Could not parse TBAcheck for: %s - %s', episode, e)
                                 else:
@@ -700,9 +701,10 @@ def mainRun(userdata):
                     url = 'https://tvlistings.gracenote.com/api/grid?lineupId=&timespan=3&headendId=' + lineupcode + '&country=' + country + '&device=' + device + '&postalCode=' + zipcode + '&time=' + str(gridtime) + '&pref=-&userId=-'
                     saveContent = urlopen(url).read()
                     savepage(fileDir, saveContent)
-                except:
+                except Exception as e:
                     logging.warn('Could not download guide data for: %s', str(gridtime))
                     logging.warn('URL: %s', url)
+                    logging.warn('Exception: %s', str(e))
             if os.path.exists(fileDir):
                 try:
                     with gzip.open(fileDir, 'rb') as f:
@@ -717,9 +719,10 @@ def mainRun(userdata):
                             os.remove(fileDir)
                             logging.info('Deleting %s due to TBA listings', filename)
                         except OSError as e:
-                            logging.warn('Error Deleting: %s - %s.' % (e.filename, e.strerror))
-                except:
+                            logging.warn('Error Deleting: %s - %s.' % (e.filename, str(e)))
+                except Exception as e:
                     logging.warn('JSON file error for: %s - deleting file', filename)
+                    logging.warn('Exception: %s', str(e))
                     os.remove(fileDir)
             count += 1
             gridtime = gridtime + 10800
