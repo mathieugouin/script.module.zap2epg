@@ -1,3 +1,7 @@
+# Fork reason
+
+Fork to keep python2/3 compatibility for old Kodi installation.
+
 # zap2epg - Kodi addon (script.module.zap2epg)
 
 zap2epg will generate an xmltv.xml file for USA/Canada TV lineups.
