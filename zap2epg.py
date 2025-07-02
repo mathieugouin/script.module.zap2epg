@@ -53,6 +53,7 @@ def mainRun(userdata):
                 settingStr = None
         settingID = setting.get('id')
         settingsDict[settingID] = settingStr
+    useragent = "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
     for setting in settingsDict:
         if setting == 'slist':
             stationList = settingsDict[setting]
@@ -100,7 +101,7 @@ def mainRun(userdata):
         country = 'USA'
     else:
         country = 'CAN'
-    logging.info('Running zap2epg-1.3.4 for zipcode: %s and lineup: %s', zipcode, lineup)
+    logging.info('Running zap2epg-1.3.5 for zipcode: %s and lineup: %s', zipcode, lineup)
     pythonStartTime = time.time()
     cacheDir = os.path.join(userdata, 'cache')
     dayHours = int(days) * 8  # set back to 8 when done testing
@@ -389,7 +390,7 @@ def mainRun(userdata):
                         schedule[skey]['chicon'] = station.get('thumbnail').split('?')[0]
                         chnumStart = station.get('channelNo')
                         if '.' not in chnumStart and chmatch == 'true' and chName is not None:
-                            chsub = re.search('(\d+)$', chName)
+                            chsub = re.search(r'(\d+)$', chName)
                             if chsub is not None:
                                 chnumUpdate = chnumStart + '.' + chsub.group(0)
                             else:
@@ -409,7 +410,7 @@ def mainRun(userdata):
                     schedule[skey]['chicon'] = station.get('thumbnail').split('?')[0]
                     chnumStart = station.get('channelNo')
                     if '.' not in chnumStart and chmatch == 'true' and chName is not None:
-                        chsub = re.search('(\d+)$', chName)
+                        chsub = re.search(r'(\d+)$', chName)
                         if chsub is not None:
                             chnumUpdate = chnumStart + '.' + chsub.group(0)
                         else:
@@ -491,8 +492,9 @@ def mainRun(userdata):
                                     logging.info('Downloading details data for: %s', EPseries)
                                     url = 'https://tvlistings.gracenote.com/api/program/overviewDetails'
                                     data = 'programSeriesID=' + EPseries
+                                    data_encode = data.encode('utf-8')
                                     try:
-                                        URLcontent = Request(url, data=data)
+                                        URLcontent = Request(url, data=data_encode, headers={'User-Agent': useragent})
                                         JSONcontent = urlopen(URLcontent).read()
                                         if JSONcontent:
                                             with open(fileDir, "wb+") as f:
@@ -717,7 +719,8 @@ def mainRun(userdata):
                 try:
                     logging.info('Downloading guide data for: %s', str(gridtime))
                     url = 'https://tvlistings.gracenote.com/api/grid?lineupId=&timespan=3&headendId=' + lineupcode + '&country=' + country + '&device=' + device + '&postalCode=' + zipcode + '&time=' + str(gridtime) + '&pref=-&userId=-'
-                    saveContent = urlopen(url).read()
+                    req = Request(url, data=None, headers={'User-Agent': useragent})
+                    saveContent = urlopen(req).read()
                     savepage(fileDir, saveContent)
                 except Exception as e:
                     logging.warn('Could not download guide data for: %s', str(gridtime))
@@ -761,5 +764,5 @@ def mainRun(userdata):
 if __name__ == '__main__':
     userdata = os.getcwd()
     log = os.path.join(userdata, 'zap2epg.log')
-    logging.basicConfig(filename=log, filemode='w', format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S', level=logging.DEBUG)
+    logging.basicConfig(filename=log, filemode='w', format='%(asctime)s %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
     mainRun(userdata)

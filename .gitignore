@@ -1,7 +1,9 @@
 /.idea
 /addon_data
 /cache
+/.venv
 *.pyo
 *.log
 xmltv*.xml
 *.json
+/settings.xml
