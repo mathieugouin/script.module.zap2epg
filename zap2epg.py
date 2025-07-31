@@ -40,9 +40,14 @@ def fetch_url(string, options):
     url = 'https://tvlistings.gracenote.com'
     data = None                 #initialize variable
     if string == 'postal':      #default.py line 201
-        substring = f"/gapzap_webapi/api/Providers/getPostalCodeProviders/{options['country']}/{options['zipcodeNew']}/gapzap/en"
+        substring = "/gapzap_webapi/api/Providers/getPostalCodeProviders/{}/{}/gapzap/en".format(
+            options['country'], options['zipcodeNew']
+        )
     elif string == 'lineup':      #default.py line 113, zap2epg.py line 768
-        substring = f"/api/grid?aid=orbebb&TMSID=&AffiliateID=lat&FromPage=TV%20Grid&lineupId=&timespan=3&headendId={options['lineupcode']}&country={options['country']}&device={options['device']}&postalCode={options['zipcode']}&time={options['gridtime']}&isOverride=true&pref=-&userId=-"
+        substring = ("/api/grid?aid=orbebb&TMSID=&AffiliateID=lat&FromPage=TV%20Grid&lineupId=&timespan=3"
+             "&headendId={}&country={}&device={}&postalCode={}&time={}&isOverride=true&pref=-&userId=-").format(
+            options['lineupcode'], options['country'], options['device'], options['zipcode'], options['gridtime']
+        )
     elif string == 'programDetails':  #zap2epg line 566
         substring =  '/api/program/overviewDetails'
         data = options['data_encode']
