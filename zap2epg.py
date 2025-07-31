@@ -68,13 +68,13 @@ def fetch_url(string, options):
             return response.read()
 
     except HTTPError as e:
-        logging.warning(f"HTTP Error: {e.code} - {e.reason}")
+        logging.warning("HTTP Error: {} - {}".format(e.code, e.reason))
         if e.code == 429:   #Too Many Requests
             time.sleep(2)
     except URLError as e:
-        logging.warning(f"URL Error: {e.reason}")
+        logging.warning("URL Error: {}".format(e.reason))
     except Exception as e:
-        logging.warning(f"Error Type: {type(e).__name__}: {e}")
+        logging.warning("Error Type: {}: {}".format(type(e).__name__, e))
 
 
 def mainRun(userdata):
