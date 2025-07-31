@@ -36,6 +36,48 @@ import xml.etree.ElementTree as ET
 from collections import OrderedDict
 
 
+def fetch_url(string, options):
+    url = 'https://tvlistings.gracenote.com'
+    data = None                 #initialize variable
+    if string == 'postal':      #default.py line 201
+        substring = "/gapzap_webapi/api/Providers/getPostalCodeProviders/{}/{}/gapzap/en".format(
+            options['country'], options['zipcodeNew']
+        )
+    elif string == 'lineup':      #default.py line 113, zap2epg.py line 768
+        substring = ("/api/grid?aid=orbebb&TMSID=&AffiliateID=lat&FromPage=TV%20Grid&lineupId=&timespan=3"
+             "&headendId={}&country={}&device={}&postalCode={}&time={}&isOverride=true&pref=-&userId=-").format(
+            options['lineupcode'], options['country'], options['device'], options['zipcode'], options['gridtime']
+        )
+    elif string == 'programDetails':  #zap2epg line 566
+        substring =  '/api/program/overviewDetails'
+        data = options['data_encode']
+
+    try:
+        combinedURL = url + substring
+
+        if isinstance(data, str):
+            data = data.encode('utf-8')  # encode string to bytes
+
+        headers = [
+            ("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:115.0) Gecko/20100101 Firefox/115.0"),
+            ("Accept", "application/json"),
+            ("Accept-Language", "en-US,en;q=0.9"),
+        ]
+        req = Request(combinedURL, data=data, headers=dict(headers))
+        resp = urlopen(req)
+        return resp.read()
+    except HTTPError as e:
+        logging.warning("HTTP Error: {} - {}".format(e.code, e.reason))
+        if e.code == 429:   #Too Many Requests
+            time.sleep(2)
+    except URLError as e:
+        logging.warning("URL Error: {}".format(e.reason))
+    except Exception as e:
+        logging.warning("Error Type: {}: {}".format(type(e).__name__, e))
+    finally:
+        resp.close()
+
+
 def mainRun(userdata):
     settingsFile = os.path.join(userdata, 'settings.xml')
     settings = ET.parse(settingsFile)
@@ -53,7 +95,6 @@ def mainRun(userdata):
                 settingStr = None
         settingID = setting.get('id')
         settingsDict[settingID] = settingStr
-    useragent = "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0"
     for setting in settingsDict:
         if setting == 'slist':
             stationList = settingsDict[setting]
@@ -101,7 +142,7 @@ def mainRun(userdata):
         country = 'USA'
     else:
         country = 'CAN'
-    logging.info('Running zap2epg-1.3.5 for zipcode: %s and lineup: %s', zipcode, lineup)
+    logging.info('Running zap2epg-1.3.6 for zipcode: %s and lineup: %s', zipcode, lineup)
     pythonStartTime = time.time()
     cacheDir = os.path.join(userdata, 'cache')
     dayHours = int(days) * 8  # set back to 8 when done testing
@@ -174,7 +215,6 @@ def mainRun(userdata):
     def savepage(fileDir, data):
         with gzip.open(fileDir, "wb+") as f:
             f.write(data)
-            f.close()
 
     def genreSort(EPfilter, EPgenre):
         genreList = []
@@ -490,22 +530,20 @@ def mainRun(userdata):
                                 retry = 3
                                 while retry > 0:
                                     logging.info('Downloading details data for: %s', EPseries)
-                                    url = 'https://tvlistings.gracenote.com/api/program/overviewDetails'
                                     data = 'programSeriesID=' + EPseries
                                     data_encode = data.encode('utf-8')
                                     try:
-                                        URLcontent = Request(url, data=data_encode, headers={'User-Agent': useragent})
-                                        JSONcontent = urlopen(URLcontent).read()
+                                        URLcontent = fetch_url('programDetails', {'data_encode': data_encode})
+                                        JSONcontent = json.dumps(json.loads(URLcontent)).encode('utf-8')
                                         if JSONcontent:
                                             with open(fileDir, "wb+") as f:
                                                 f.write(JSONcontent)
-                                                f.close()
                                             retry = 0
                                         else:
                                             time.sleep(1)
                                             retry -= 1
                                             logging.warn('Retry downloading missing details data for: %s', EPseries)
-                                    except URLError as e:
+                                    except Exception as e:
                                         time.sleep(1)
                                         retry -= 1
                                         logging.warn('Retry downloading details data for: %s  -  %s', EPseries, e)
@@ -514,7 +552,6 @@ def mainRun(userdata):
                                 if fileSize > 0:
                                     with open(fileDir, 'rb') as f:
                                         EPdetails = json.loads(f.read())
-                                        f.close()
                                     logging.info('Parsing %s', filename)
                                     edict['epimage'] = EPdetails.get('seriesImage')
                                     edict['epfan'] = EPdetails.get('backgroundImage')
@@ -702,6 +739,7 @@ def mainRun(userdata):
         except Exception as e:
             logging.exception('Exception: addXdetails to description')
 
+    # mainRun code:
     try:
         if not os.path.exists(cacheDir):
             os.mkdir(cacheDir)
@@ -718,19 +756,16 @@ def mainRun(userdata):
             if not os.path.exists(fileDir):
                 try:
                     logging.info('Downloading guide data for: %s', str(gridtime))
-                    url = 'https://tvlistings.gracenote.com/api/grid?lineupId=&timespan=3&headendId=' + lineupcode + '&country=' + country + '&device=' + device + '&postalCode=' + zipcode + '&time=' + str(gridtime) + '&pref=-&userId=-'
-                    req = Request(url, data=None, headers={'User-Agent': useragent})
-                    saveContent = urlopen(req).read()
+                    options = {'lineupcode': lineupcode, 'country': country, 'device': device, 'zipcode': zipcode, 'gridtime': str(gridtime)}
+                    saveContent = fetch_url('lineup', options)
                     savepage(fileDir, saveContent)
                 except Exception as e:
                     logging.warn('Could not download guide data for: %s', str(gridtime))
-                    logging.warn('URL: %s', url)
                     logging.warn('Exception: %s', str(e))
             if os.path.exists(fileDir):
                 try:
                     with gzip.open(fileDir, 'rb') as f:
                         content = f.read()
-                        f.close()
                     logging.info('Parsing %s', filename)
                     if count == 0:
                         parseStations(content)
