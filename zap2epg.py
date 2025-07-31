@@ -64,9 +64,8 @@ def fetch_url(string, options):
             ("Accept-Language", "en-US,en;q=0.9"),
         ]
         req = Request(combinedURL, data=data, headers=dict(headers))
-        with urlopen(req) as response:
-            return response.read()
-
+        resp = urlopen(req)
+        return resp.read()
     except HTTPError as e:
         logging.warning("HTTP Error: {} - {}".format(e.code, e.reason))
         if e.code == 429:   #Too Many Requests
@@ -75,6 +74,8 @@ def fetch_url(string, options):
         logging.warning("URL Error: {}".format(e.reason))
     except Exception as e:
         logging.warning("Error Type: {}: {}".format(type(e).__name__, e))
+    finally:
+        resp.close()
 
 
 def mainRun(userdata):
