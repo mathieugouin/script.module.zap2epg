@@ -160,7 +160,7 @@ def mainRun(userdata):
                 request.add_header('Authorization', b'Basic ' + base64.b64encode(usern + b':' + passw))
                 response = urlopen(request)
             else:
-                response = urlopen(channels_url)
+                response = urlopen(channels_url, timeout=5)
 
             logging.info('Accessing Tvheadend channel list from: %s', tvhUrlBase)
             channels = json.load(response)
@@ -169,7 +169,7 @@ def mainRun(userdata):
                 channelNum = ch['number']
                 tvhMatchDict[channelNum] = channelName
             logging.info('%s Tvheadend channels found...', str(len(tvhMatchDict)))
-        except (HTTPError, URLError) as e:
+        except (HTTPError, URLError, TimeoutError) as e:
             logging.exception('Exception: tvhMatch - %s', str(e))
             pass
 
@@ -438,7 +438,7 @@ def mainRun(userdata):
                         else:
                             chnumUpdate = chnumStart
                         schedule[skey]['chnum'] = chnumUpdate
-                        if tvhmatch == 'true' and '.' in chnumUpdate:
+                        if tvhmatch == 'true' and '.' in chnumUpdate and len(tvhMatchDict) > 0:
                             if chnumUpdate in tvhMatchDict:
                                 schedule[skey]['chtvh'] = tvhMatchDict[chnumUpdate]
                             else:
@@ -458,7 +458,7 @@ def mainRun(userdata):
                     else:
                         chnumUpdate = chnumStart
                     schedule[skey]['chnum'] = chnumUpdate
-                    if tvhmatch == 'true' and '.' in chnumUpdate:
+                    if tvhmatch == 'true' and '.' in chnumUpdate and len(tvhMatchDict) > 0:
                         if chnumUpdate in tvhMatchDict:
                             schedule[skey]['chtvh'] = tvhMatchDict[chnumUpdate]
                         else:
@@ -747,7 +747,7 @@ def mainRun(userdata):
         gridtime = gridtimeStart
         if stationList is None:
             logging.info('No channel list found - adding all stations!')
-        if tvhoff == 'true' and tvhmatch == 'true':
+        if tvhmatch == 'true':
             tvhMatchGet()
         deleteOldCache(gridtimeStart)
         while count < dayHours:
