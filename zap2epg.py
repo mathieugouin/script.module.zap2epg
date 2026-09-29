@@ -18,9 +18,12 @@ try:
     # Python 3
     from urllib.request import urlopen, Request
     from urllib.error import HTTPError, URLError
+    from html import unescape as html_unescape
 except ImportError:
     # Python 2
     from urllib2 import urlopen, Request, HTTPError, URLError
+    from HTMLParser import HTMLParser
+    html_unescape = HTMLParser().unescape
 
 import base64
 import codecs
@@ -34,6 +37,14 @@ import re
 import json
 import xml.etree.ElementTree as ET
 from collections import OrderedDict
+from xml.sax.saxutils import escape
+
+
+def xml_escape(text):
+    # Escape special characters in text for XML, while also unescaping any HTML entities first.
+    clean = html_unescape(text)
+    safe = escape(clean)
+    return safe
 
 
 def fetch_url(string, options):
@@ -343,18 +354,18 @@ def mainRun(userdata):
                                 stopTime = convTime(edict['epend'])
                                 fh.write('\t<programme start=\"' + startTime + ' ' + TZoffset + '\" stop=\"' + stopTime + ' ' + TZoffset + '\" channel=\"' + station + '.zap2epg' + '\">\n')
                                 if edict['epshow'] is not None:
-                                    fh.write('\t\t<title lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['epshow']) + '</title>\n')
+                                    fh.write('\t\t<title lang=\"' + lang + '\">' + xml_escape(edict['epshow']) + '</title>\n')
                                 if edict['eptitle'] is not None:
-                                    fh.write('\t\t<sub-title lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['eptitle']) + '</sub-title>\n')
+                                    fh.write('\t\t<sub-title lang=\"' + lang + '\">' + xml_escape(edict['eptitle']) + '</sub-title>\n')
                                 # no subtitle, but year provided: write movie year as subtitle
                                 if edict['eptitle'] is None and edict['epyear'] is not None:
                                     fh.write('\t\t<sub-title lang=\"' + lang + '\">Movie (' + edict['epyear'] + ')</sub-title>\n')
                                 if xdesc == 'true':
                                     xdescSort = addXDetails(edict)
-                                    fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&','&amp;', xdescSort) + '</desc>\n')
+                                    fh.write('\t\t<desc lang=\"' + lang + '\">' + xml_escape(xdescSort) + '</desc>\n')
                                 if xdesc == 'false':
                                     if edict['epdesc'] is not None:
-                                        fh.write('\t\t<desc lang=\"' + lang + '\">' + re.sub('&', '&amp;', edict['epdesc']) + '</desc>\n')
+                                        fh.write('\t\t<desc lang=\"' + lang + '\">' + xml_escape(edict['epdesc']) + '</desc>\n')
                                 if edict['epyear'] is not None:
                                     fh.write('\t\t<date>' + edict['epyear'] + '</date>\n')
                                 if epgenre != '0':
