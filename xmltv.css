@@ -1,0 +1,63 @@
+/*
+ * The General Elements Below Set the Default Font Family
+ */
+span, div, th, td, font, h1, h2, h3, h4, p, body, small, input
+{
+    font-family: Tahoma, Arial, MS Sans Serif;
+}
+
+body
+{
+    font-size: 9pt;
+}
+
+/*
+ * If a program falls into more than one category, the
+ * last style it sees will be the one applied.
+ */
+.drama, .comed, .actio, .suspe, .scien, .fanta, .docud
+{
+    background-color: #36f58c;
+}
+.talk, .paid, .relig, .shopp, .commu, .compu
+{
+    background-color: #e4ac9b;
+}
+.sport, .water
+{
+    background-color: #28bbff;
+}
+.news, .speci, .inter, .newsm, .publi, .docum
+{
+    background-color: #fff171;
+}
+.child, .anima, .educa
+{
+    background-color: #ff9fd9;
+}
+.empty_category .child_hidden
+{
+    background-color: #fff
+}
+.unknown
+{
+    background-color: #f00
+}
+
+/* not used, colors not updated*/
+.reali
+{
+    background-color: #20B2AA;
+}
+.cooki, .how-t, .home, .garde
+{
+    background-color: #7FFFD4;
+}
+.mv
+{
+    background-color:#FF6347;
+}
+.sitco, .serie
+{
+    background-color: #ADD8E6;
+}
